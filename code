@@ -1,0 +1,36 @@
+import requests
+import json
+
+currency_cache = {}
+r_usd = requests.get(f'http://www.floatrates.com/daily/usd.json')
+r_eur = requests.get(f'http://www.floatrates.com/daily/eur.json')
+
+currency_rates_usd = json.loads(r_usd.text)
+currency_rates_eur = json.loads(r_eur.text)
+
+for key in currency_rates_usd:
+    currency_cache[key + 'usd'] = (currency_rates_usd[key]['inverseRate'])
+for key in currency_rates_eur:
+    currency_cache[key + 'eur'] = (currency_rates_eur[key]['inverseRate'])
+
+given_currency = input().lower()  # Person's currency
+
+while True:
+    changing_currency = input().lower()  # Currency we change to
+    if not changing_currency:
+        break
+    given_amount = float(input())  # Amount of currency to change
+    if given_amount <= 0:
+        break
+    print('Checking the cache...')
+    if given_currency + changing_currency in currency_cache:
+        print('Oh! It is in the cache!')
+        changing_amount = float(currency_cache[given_currency + changing_currency]*given_amount)
+        print(f'You received %.2f {changing_currency.upper()}.' % changing_amount)
+    else:
+        print('Sorry, but it is not in the cache!')
+        r = requests.get(f'http://www.floatrates.com/daily/{given_currency}.json')  # Getting request for currency
+        currency_rates = json.loads(r.text)
+        currency_cache[given_currency + changing_currency] = (currency_rates[changing_currency]['rate'])
+        changing_amount = float(currency_cache[given_currency + changing_currency.lower()]*given_amount)
+        print(f'You received %.2f {changing_currency.upper()}.' % changing_amount)
